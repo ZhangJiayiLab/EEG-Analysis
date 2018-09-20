@@ -24,11 +24,12 @@ import datacleaner
 
 class EntrainAnalysis(object):
     def __init__(self, datadir, resultdir, filename,
-                fs, fftwindow, fftoverlap, roi):
+                fs, fftwindow, fftoverlap, roi, entrain_cue_onset):
         datacleaner.processCompact(datadir, filename)
         data = loadmat(os.path.join(datadir, "compact"+filename))
         self.channels = data["channels"]
         self.cue_onset = data["cue_onset"][0,:]
+        self.entrain_cue_onset = entrain_cue_onset
         self.times = data["times"][0,:]
         self.name = os.path.splitext(filename)[0]
         self.resultdir = resultdir
@@ -49,12 +50,19 @@ class EntrainAnalysis(object):
         pxx, tspec = stfft.stfft(ch_split, self.fftwindow, self.fftoverlap, self.fs)
         power_channels = np.zeros((np.size(self.channels,0), np.size(pxx,1),
                                    np.size(pxx, 2)))
+        power_entrain = np.zeros((np.size(self.channels,0), np.size(pxx,1),
+                                  np.size(pxx, 2)))
         
         print("processing time-frequency domain analysis")
         for chidx in tqdm(range(np.size(self.channels, 0))):
             ch_split = general.split_datawithmarker(
                     self.channels[chidx, :], self.cue_onset, self.roi, self.fs)
             pxx, tspec = stfft.stfft(ch_split, self.fftwindow, self.fftoverlap, 
+                                     self.fs, rho=rho)
+            
+            ch_split_entrain = general.split_datawithmarker(
+                    self.channels[chidx, :], self.entrain_cue_onset, self.roi, self.fs)
+            pxx_entrain, tspec_entrain = stfft.stfft(ch_split_entrain, self.fftwindow, self.fftoverlap, 
                                      self.fs, rho=rho)
             
             if plot_latency:
@@ -65,24 +73,28 @@ class EntrainAnalysis(object):
                 plt.close()
 
             power_channels[chidx, :, :] = np.mean(pxx, 0)
+            power_entrain[chidx, :, :]  = np.mean(pxx_entrain, 0)
             
         self.tfdata = power_channels
-        self.tspec = tspec - self.roi[0]
+        self.tfdata_entrain = power_entrain
+        self.tspec = tspec + self.roi[0]
         self.rho = rho
         
         savemat(os.path.join(self.resultdir, "tfERP",
             self.name, self.name + "tf.mat"),
             {"name":self.name,
              "power_channels": power_channels,
-             "tspec": tspec - self.roi[0],
+             "entrain_channels": power_entrain,
+             "tspec": tspec + self.roi[0],
              "rho": rho,
              })
         
-    def latency_analysis(self, cutoffbans="gamma", n=3 , fromfile="", savedir="", plot_latency=False):
+    def latency_analysis(self, cutoffbans="gamma", n=3 , fromfile="", 
+                         tfdataname="entrain_channels", savedir="", plot_latency=False):
         if fromfile != "":
             data = loadmat(fromfile)
-            self.tfdata = data["power_channels"]
-            self.tspec = data["tspec"][0,:]-2
+            self.tfdata = data[tfdataname]
+            self.tspec = data["tspec"][0,:]
             self.rho = data["rho"][0,0]
 
         cutoff = eegfilter.getbandrange(cutoffbans)
@@ -105,7 +117,7 @@ class EntrainAnalysis(object):
                     xm1, ym1 = self.tspec[each[0]-1], tfcurve_shift[each[0]-1]
                     points.append(x0 - y0 * (x0-xm1)/(y0-ym1))
                 datarise.append(points)
-                
+        
         ## latency
         latency = np.array([])
         for idx, item in enumerate(datarise):
@@ -116,6 +128,7 @@ class EntrainAnalysis(object):
                     break
             latency = np.append(latency, point)
         self.latency = latency
+        
         
 
 ##### ARCHIVE #####

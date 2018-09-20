@@ -38,8 +38,9 @@ for fidx, eachfile in enumerate(files):
         resultdir = resultdir,
         filename = eachfile,
         fs=fs,
-        fftwindow  = 200,  #points
-        fftoverlap = 150,  #points
+        fftwindow  = 1000,  #points
+        fftoverlap = 800,  #points
+        entrain_cue_onset = np.array([103, 108, 111]),
         roi=(-2,5)
     )
     
@@ -47,12 +48,18 @@ for fidx, eachfile in enumerate(files):
     analysis.tfdomain_analysis()
     
     for targetband in latency_cutoffband:
+        
         analysis.latency_analysis(cutoffbans=targetband)
+        latency = analysis.latency
+        analysis.latency_analysis(cutoffbans=targetband, fromfile="")
+        latency_entrain = analysis.latency
+        
         latencydatafile = os.path.join(analysis.resultdir, "latency", 
                                        analysis.name+"_"+targetband+".mat")
         savemat(latencydatafile, {"name":analysis.name, 
                                   "targetband":targetband,
-                                  "latency":analysis.latency})
+                                  "latency":latency,
+                                  "latency_entrain":latency_entrain})
     
     elapsedtime = time.time() - start_t
     remaintime = (len(files)-fidx-1)*elapsedtime
