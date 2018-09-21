@@ -44,7 +44,43 @@ class EntrainAnalysis(object):
         
         general.dircheck(resultdir, os.path.splitext(filename)[0])
         
-    def tfdomain_analysis(self, plot_latency=False, rho=2):
+    def dwttd_analysis(self, frange, baseroi, rho=1):
+        ch_split = general.split_datawithmarker(
+                self.channels[1, :], self.cue_onset, self.roi, self.fs)
+        power_channels = np.zeros((np.size(self.channels,0), 
+                                   np.size(frange), np.size(ch_split, 1)))
+        power_entrain = np.zeros((np.size(self.channels,0), 
+                                  np.size(frange), np.size(ch_split, 1)))
+                                 
+        print("processing time-frequency domain analysis")
+        for chidx in tqdm(range(np.size(self.channels, 0))):
+            ch_split = general.split_datawithmarker(
+                    self.channels[chidx, :], self.cue_onset, self.roi, self.fs)
+            pxx = stfft.dwt_tf(ch_split, self.fs, frange, baseroi)
+            
+            ch_split_entrain = general.split_datawithmarker(
+                    self.channels[chidx, :], self.entrain_cue_onset, self.roi, self.fs)
+            pxx_entrain = stfft.dwt_tf(ch_split_entrain, self.fs, frange, baseroi)
+            
+            power_channels[chidx, :, :] = np.mean(pxx, 0)
+            power_entrain[chidx, :, :]  = np.mean(pxx_entrain, 0)
+            
+        self.tfdata = power_channels
+        self.tfdata_entrain = power_entrain
+#         self.tspec = tspec + self.roi[0]
+        self.rho = rho
+        
+        savemat(os.path.join(self.resultdir, "tfERP",
+            self.name, self.name + "tf.mat"),
+            {"name":self.name,
+             "method":"wavelet"
+             "power_channels": power_channels,
+             "entrain_channels": power_entrain,
+#              "tspec": tspec + self.roi[0],
+             "rho": rho,
+             })
+        
+    def tfdomain_analysis(self, plot_latency=False, rho=1):
         ch_split = general.split_datawithmarker(
                 self.channels[1, :], self.cue_onset, self.roi, self.fs)
         pxx, tspec = stfft.stfft(ch_split, self.fftwindow, self.fftoverlap, self.fs)
@@ -83,6 +119,7 @@ class EntrainAnalysis(object):
         savemat(os.path.join(self.resultdir, "tfERP",
             self.name, self.name + "tf.mat"),
             {"name":self.name,
+             "method": "stfft"
              "power_channels": power_channels,
              "entrain_channels": power_entrain,
              "tspec": tspec + self.roi[0],
@@ -101,7 +138,7 @@ class EntrainAnalysis(object):
         
         datarise = []
         for chidx in range(np.size(self.tfdata,0)):
-            tfcurve = np.mean(self.tfdata[chidx, self.rho*cutoff[0]:self.rho*cutoff[1], :], 0)
+            tfcurve = np.mean(self.tfdata[chidx, int(self.rho*cutoff[0]):int(self.rho*cutoff[1]), :], 0)
             tfcurve_mu = np.mean(tfcurve[np.where(self.tspec<0)])
             tfcurve_shift = tfcurve - tfcurve_mu
             tfcurve_sig = np.std(tfcurve[np.where(self.tspec<0)])

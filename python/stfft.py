@@ -9,7 +9,7 @@ email: yzmiao@protonmail.com
 last update: Sept 21 2018
 """
 
-from scipy.fftpack import fft
+from scipy.fftpack import fft, ifft
 import numpy as np
 
 
@@ -50,6 +50,18 @@ def stfft(data, window, noverlap, fs, taper=hantaper, rho=2):
 
 
 def dwt_tf(eeg_data, fs, frange, baseroi):
+    """time domain analysis with wavelet tranform
+    
+    Syntax: Pxx = dwt_tf(eeg_data, fs, frange, baseroi)
+    
+    Keyword arguments:
+    data     -- a m*n numpy.ndarray. 
+                columns as observations (or channels), 
+                rows as raw data.
+    fs       -- sampling frequency
+    frange   -- frequency array for calculation
+    baseroi  -- range for normalization baseline
+    """
     # wavelet parameters
     wtime = np.linspace(-1,1,fs)
     nConv = np.size(eeg_data, 1) + 2*fs

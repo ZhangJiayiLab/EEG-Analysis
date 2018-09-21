@@ -45,7 +45,8 @@ for fidx, eachfile in enumerate(files):
     )
     
     print("starting processing %d/%d: %s"%(fidx, len(files), analysis.name))
-    analysis.tfdomain_analysis()
+#     analysis.tfdomain_analysis()
+    analysis.dwttd_analysis(np.linspace(0,500,100), (1.5, 2), rho=0.2)
     
     for targetband in latency_cutoffband:
         
