@@ -63,21 +63,21 @@ def dwt_tf(eeg_data, fs, frange, baseroi):
     baseroi  -- range for normalization baseline
     """
     # wavelet parameters
-    wtime = np.linspace(-1,1,fs)
+    wtime = np.linspace(-1,1,2*fs)
     nConv = np.size(eeg_data, 1) + 2*fs
-    fft_eeg = fft(eeg_data, nConv)
+    fft_eeg = np.fft.fft(eeg_data, nConv)
     
     Pxx = np.zeros((np.size(frange), np.size(eeg_data, 1)))
     for idx, F in enumerate(frange):
         s = 6 / (2 * np.pi * F)
         wavelet = np.exp(2*1j*np.pi*wtime*F) * np.exp(- wtime**2/(2*s**2))  # morlet wavelet
-        fft_wavelet = fft(wavelet, nConv)
+        fft_wavelet = np.fft.fft(wavelet, nConv)
         
-        conv_wave = ifft(fft_wavelet*fft_eeg, nConv)
-        conv_wave = conv_wave[:, fs//2:-(fs+fs//2)]
+        conv_wave = np.fft.ifft(fft_wavelet*fft_eeg, nConv)
+        conv_wave = conv_wave[:, fs:-fs]
         temppow = np.mean(np.abs(conv_wave)**2,0)
         temppow_cal = 10*np.log10(temppow / np.mean(temppow[int(baseroi[0]*fs):int(baseroi[1]*fs)]))  # db-calibration
-        
+#         temppow_cal = 10*np.log10(temppow)
         Pxx[idx, :] = temppow_cal
 
     return Pxx

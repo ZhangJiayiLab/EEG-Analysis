@@ -23,8 +23,8 @@ def dircheck(resultdir, title):
     """Check and create working directory"""
     checklist = [
         resultdir,
-        os.path.join(resultdir, "bandpass"),
-        os.path.join(resultdir, "bandpass", title),
+#         os.path.join(resultdir, "bandpass"),
+#         os.path.join(resultdir, "bandpass", title),
         os.path.join(resultdir, "tfERP"),
         os.path.join(resultdir, "tfERP", title),
         os.path.join(resultdir, "latency")
