@@ -7,7 +7,7 @@ last update: Sept 20 2018
 """
 
 # %matplotlib inline
-import sys, os
+import sys, os, re
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
@@ -46,32 +46,34 @@ def processCompact(datadir, filename, prefix="compact", overwrite=False, renderp
                 channels[idx-1, :] = np.array(f[i]["values"])[0,:]
         
         savemat(os.path.join(datadir, prefix+filename), 
-                {"times":times, "cue_onset":cueonset, "channels":channels})
+                {"times":times, 
+                 "cue_onset":cueonset, 
+                 "channels":channels, 
+                 "markers":{
+                     "grating":cueonset, 
+                     "entrain":[cueonset[-1]+5, cueonset[-1]+10]}
+                })
             
     
 if __name__ == "__main__":
     datadir = sys.argv[1]
-    filename = sys.argv[2]
-    needPreview = False
-
-    f = h5py.File(os.path.join(datadir,filename), 'r')
-    channels = np.zeros((len(f), len(f["Chan__1"]["times"][0])))
-    times = np.array(f["Chan__1"]["times"])[0,:]
-    cueonset = np.array(f["Memory"]["times"])[0,:]
-
-    for i in f.keys():
-        if i == "Memory" or i == "file":
+    
+    ignorefiles = [".DS_Store"]
+    ignore_pattern = "^compact"
+    match_pattern = r".*?\.mat"
+    
+    rawfiles = []
+    for item in os.listdir(datadir):
+        if item in ignorefiles:
             continue
-
-        idx = int(np.array(f[i]["title"], dtype="uint8")[4:].tostring())
-        channels[idx-1, :] = np.array(f[i]["values"])[0,:]
-
-    savemat(os.path.join(datadir, "compact"+filename), {"times":times, "cue_onset":cueonset, "channels":channels})
-
-    if needPreview == "preview":
-        previewdir = os.path.join(datadir, "preview", os.path.splitext(filename)[0])
-        if not os.path.isdir(previewdir):
-            os.mkdir(previewdir)
-        nchn, nsample = np.shape(channels)
-        for i in tqdm(range(nchn)):
-            previewChannel(previewdir, i, save=True)
+        if re.match(ignore_pattern, item):
+            continue
+        
+        if re.match(match_pattern, item):
+            rawfiles.append(item)
+    
+    print(rawfiles)
+    for idx, item in enumerate(rawfiles):
+        print("%d/%d: %s"%(idx, len(rawfiles), item))
+        if not checkCompact(datadir, item):
+            processCompact(datadir, item)
