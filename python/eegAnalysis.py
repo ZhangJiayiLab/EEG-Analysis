@@ -68,7 +68,8 @@ class EEGAnalysis(object):
                  })
     
     
-    def fast_latency_detection(self, markername, cutoffband="gamma", n=3, gapsec = 0.1, rho=0.5, baseroi=(1.5,2)):
+    def fast_latency_detection(self, markername, cutoffband="gamma", 
+                               n=3, gapsec = 0.1, rho=0.5, baseroi=(1.5,2), validlen=0.1):
         cutoff = eegFilter.getbandrange(cutoffband)
         frange = np.linspace(cutoff[0], cutoff[1], int((cutoff[1]-cutoff[0])*rho))
         cue_onset = self.markers[markername][0][0][0,:]
@@ -90,7 +91,7 @@ class EEGAnalysis(object):
             thresh = n*tfcurve_sig
             
             datarise_item = general.group_consecutive(np.where(tfcurve_shift > thresh)[0], gap=gapsec*self.fs)
-            if len(datarise_item[0]) == 0:
+            if len(datarise_item[0]) < validlen*self.fs:
                 datarise.append([np.nan])
             else:
                 points = []
