@@ -13,27 +13,27 @@ import os
 def split_datawithmarker(data, marker, roi, fs):
     """Splite data array by markers and roi."""
     groupdata = np.zeros((len(marker), (roi[1]-roi[0])*fs))
-    
+
     for idx, each in enumerate(marker):
         groupdata[idx, :] = data[(int(each)+roi[0])*fs:(int(each)+roi[1])*fs]
-    
+
     return groupdata
 
 def dircheck(resultdir, title):
     """Check and create working directory"""
     checklist = [
         resultdir,
-#         os.path.join(resultdir, "bandpass"),
-#         os.path.join(resultdir, "bandpass", title),
-        os.path.join(resultdir, "tfERP"),
-        os.path.join(resultdir, "tfERP", title),
-        os.path.join(resultdir, "latency")
+        #os.path.join(resultdir, "bandpass"),
+        #os.path.join(resultdir, "bandpass", title),
+        #os.path.join(resultdir, "tfERP"),
+        #os.path.join(resultdir, "tfERP", title),
+        #os.path.join(resultdir, "latency")
     ]
-    
+
     for item in checklist:
         if not os.path.exists(item) or not os.path.isdir(item):
             os.mkdir(item)
-    
+
     return
 
 def group_consecutive(a, gap=1):
