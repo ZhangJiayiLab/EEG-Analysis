@@ -9,3 +9,15 @@ should at least have 3 variables:
 - `times`: n length 1D vector
 - `markers`: struct(markername: markervalue)
 - `cue_onset`: 1D vector for markers (not used any more)
+
+## TODO
+
+### Entrain
+ - [ ] average frequency-time domain output
+     - [ ] grating
+     - [ ] entrain
+ - [ ] latency time
+     - [ ] grating
+     - [ ] entrian
+ - [ ] auc in grating periods and inter-stimuli intervals
+ - [ ] time points of all events above threshold
