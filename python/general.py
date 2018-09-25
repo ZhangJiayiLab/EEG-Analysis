@@ -23,11 +23,16 @@ def dircheck(resultdir, title):
     """Check and create working directory"""
     checklist = [
         resultdir,
-        #os.path.join(resultdir, "bandpass"),
-        #os.path.join(resultdir, "bandpass", title),
-        #os.path.join(resultdir, "tfERP"),
-        #os.path.join(resultdir, "tfERP", title),
-        #os.path.join(resultdir, "latency")
+        os.path.join(resultdir, "tf_domain"),
+        os.path.join(resultdir, "latency"),
+        os.path.join(resultdir, "event_times"),
+        os.path.join(resultdir, "auc"),
+        
+        os.path.join(resultdir, "preview"),
+        os.path.join(resultdir, "preview", "tf_domain"),
+        os.path.join(resultdir, "preview", "bandpower"),
+        os.path.join(resultdir, "preview", "raw"),
+        os.path.join(resultdir, "preview", "bandpass"),
     ]
 
     for item in checklist:

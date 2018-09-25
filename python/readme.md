@@ -13,11 +13,18 @@ should at least have 3 variables:
 ## TODO
 
 ### Entrain
- - [ ] average frequency-time domain output
-     - [ ] grating
-     - [ ] entrain
- - [ ] latency time
-     - [ ] grating
-     - [ ] entrian
- - [ ] auc in grating periods and inter-stimuli intervals
- - [ ] time points of all events above threshold
+- [x] average frequency-time domain output
+    - [x] grating (tf_domain)
+    - [x] entrain (tf_domain)
+    - [x] preview (preview/tf_domain)
+- [ ] latency time
+    - [x] grating (latency)
+    - [x] entrian (latency)
+    - [ ] preview (preview/bandpower)
+- [ ] auc in grating periods and inter-stimuli intervals (auc)
+- [ ] time points of all events
+    - [ ] threshold (event_times)
+    - [ ] range (event_times)
+- [ ] raw data
+    - [ ] raw data preview (preview/raw)
+    - [ ] bandpass filted preview (preview/bandpass)
