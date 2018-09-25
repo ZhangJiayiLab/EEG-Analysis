@@ -21,10 +21,11 @@ should at least have 3 variables:
     - [x] grating (latency)
     - [x] entrian (latency)
     - [ ] preview (preview/bandpower)
-- [ ] auc in grating periods and inter-stimuli intervals (auc)
+- [x] auc in grating periods and inter-stimuli intervals (auc)
 - [ ] time points of all events
-    - [ ] threshold (event_times)
+    - [x] threshold (event_times)
     - [ ] range (event_times)
 - [ ] raw data
     - [ ] raw data preview (preview/raw)
     - [ ] bandpass filted preview (preview/bandpass)
+- [ ] entrain average

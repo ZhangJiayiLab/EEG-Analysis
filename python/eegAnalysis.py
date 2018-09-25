@@ -51,7 +51,7 @@ class EEGAnalysis(object):
                                    np.size(frange), np.size(ch_split, 1)))
 
         print("processing time-frequency domain analysis")
-        for chidx in tqdm(range(np.size(self.channels, 0))):
+        for chidx in tqdm(range(np.size(self.channels, 0)), ascii=True):
             ch_split = general.split_datawithmarker(
                     self.channels[chidx, :], cue_onset, self.roi, self.fs)
             pxx = stfft.dwt_tf(ch_split, self.fs, frange, baseroi, reflection=True)
@@ -75,7 +75,7 @@ class EEGAnalysis(object):
                 os.mkdir(os.path.join(self.resultdir, 'preview', 'tf_domain', self.name))
             
             print("start rendering contourf preview of tf_domain ...")
-            for chidx in tqdm(range(np.size(self.tfdata, 0))):
+            for chidx in tqdm(range(np.size(self.tfdata, 0)), ascii=True):
                 plt.figure(figsize=(5,3))
                 plt.contourf(tspec, frange, self.tfdata[chidx, :, :], 30, cmap=plt.get_cmap("jet"))
                 plt.savefig(os.path.join(self.resultdir, 'preview', 'tf_domain', self.name, "ch%03d"%chidx+matsuffix+'.png'), bbox_inches='tight')
@@ -89,12 +89,14 @@ class EEGAnalysis(object):
         frange = np.logspace(np.log10(cutoff[0]), np.log10(cutoff[1]), 20)
         cue_onset = self.markers[markername][0][0][0,:]
         
+        auc_on = np.zeros((np.size(self.channels,0), np.size(cue_onset)))
+        
         if needpreview and not os.path.isdir(os.path.join(self.resultdir, 'preview', 'bandpower', self.name)):
             os.mkdir(os.path.join(self.resultdir, 'preview', 'bandpower', self.name))
 
         datarise = []
         print("processing fast latency analysis for %s"%markername)
-        for chidx in tqdm(range(np.size(self.channels, 0))):
+        for chidx in tqdm(range(np.size(self.channels, 0)), ascii=True):
             ch_split = general.split_datawithmarker(
                         self.channels[chidx, :], cue_onset, self.roi, self.fs)
             pxx = stfft.dwt_tf(ch_split, self.fs, frange, baseroi, reflection=True)
@@ -140,6 +142,9 @@ class EEGAnalysis(object):
                     break
             latency = np.append(latency, point)
         self.latency = latency
+        self.events = datarise
+#         self.auc_on = 
+#         self.auc_off = 
 
     def entrain_latency_detection(self, markername="entrain", cutoffband="gamma",
                                   n=3, gapsec=0.1, validlen=0.1, rho=2, iti=5):
@@ -156,7 +161,7 @@ class EEGAnalysis(object):
         datarise = []
         
         print("processing entrain latency analysis for %s"%markername)
-        for chidx in tqdm(range(np.size(self.channels, 0))):
+        for chidx in tqdm(range(np.size(self.channels, 0)), ascii=True):
             baseline_ch_split = general.split_datawithmarker(
                         self.channels[chidx, :], baseline_cue_onset, self.roi, self.fs)
             baseline_pxx = stfft.dwt_tf(baseline_ch_split, self.fs, frange, reflection=True)
@@ -190,6 +195,7 @@ class EEGAnalysis(object):
 #                     break
 #             latency = np.append(latency, point)
         self.latency = np.array(datarise)
+        self.events = np.array(datarise)
 
     
     def global_events_detection(self, markername="grating", cutoffband="gamma",
@@ -201,7 +207,8 @@ class EEGAnalysis(object):
         
         
         datarise = []
-        for chidx in tqdm(range(np.size(self.channels, 0))):
+        print("global events detections")
+        for chidx in tqdm(range(np.size(self.channels, 0)), ascii=True):
             baseline = general.split_datawithmarker(self.channels[chidx, :], 
                                                 cue_onset, self.roi, self.fs)
             baseline_mu = np.mean(baseline[:,np.where(tspec<0)])
@@ -221,7 +228,31 @@ class EEGAnalysis(object):
                     xm1, ym1 = tspec[each[0]-1], tfcurve_shift[each[0]-1]
                     points.append(x0 - y0 * (x0-xm1)/(y0-ym1))
                 datarise.append(points)
+            if chidx == 6:
+                break
                 
         return datarise
         
         
+    def auc_detection(self, markername, cutoffband="gamma",
+                               n=3, gapsec = 0.1, rho=0.5, baseroi=(1.5,2), validlen=0.1,
+                               needpreview=False):
+        cutoff = eegFilter.getbandrange(cutoffband)
+        frange = np.logspace(np.log10(cutoff[0]), np.log10(cutoff[1]), 20)
+        cue_onset = self.markers[markername][0][0][0,:]
+        tspec = np.linspace(self.roi[0], self.roi[1], (self.roi[1]-self.roi[0])*self.fs)
+        
+        auc_on = np.zeros((np.size(self.channels,0), np.size(cue_onset)))
+        auc_off = np.zeros((np.size(self.channels,0), np.size(cue_onset)))
+        
+        print("auc detection for %s"%markername)
+        for chidx in tqdm(range(np.size(self.channels, 0)), ascii=True):
+            ch_split = general.split_datawithmarker(
+                        self.channels[chidx, :], cue_onset, self.roi, self.fs)
+            pxx = stfft.dwt_tf(ch_split, self.fs, frange, reflection=True, needaverage=False)
+            
+            auc_on[chidx, :] = np.squeeze(np.sum(np.sum((pxx-np.mean(pxx, 0))/np.std(pxx, 0), 0)[:,np.where((0<tspec)&(tspec<2))],2))
+            auc_off[chidx, :] = np.squeeze(np.sum(np.sum((pxx-np.mean(pxx, 0))/np.std(pxx, 0), 0)[:,np.where((2<tspec)&(tspec<2.5))],2))
+            
+        self.auc_on = auc_on
+        self.auc_off = auc_off

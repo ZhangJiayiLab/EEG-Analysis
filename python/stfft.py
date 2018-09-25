@@ -52,7 +52,7 @@ def stfft(data, window, noverlap, fs, taper=hantaper, rho=2):
 
 
 # @jit(nopython=True)
-def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False):
+def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False, needaverage=True):
     """time domain analysis with wavelet tranform
     
     Syntax: Pxx = dwt_tf(eeg_data, fs, frange, baseroi)
@@ -79,7 +79,11 @@ def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False):
     nConv = np.size(fft_eeg_data, 1) + 2*fs
     fft_eeg = np.fft.fft(fft_eeg_data, nConv)
     
-    Pxx = np.zeros((np.size(frange), np.size(fft_eeg_data, 1)))
+    if needaverage:
+        Pxx = np.zeros((np.size(frange), np.size(fft_eeg_data, 1)))
+    else:
+        Pxx = np.zeros((np.size(frange), np.size(eeg_data, 0), np.size(fft_eeg_data, 1)))
+    
     for idx, F in enumerate(frange):
         s = 6 / (2 * np.pi * F)
         wavelet = np.exp(2*1j*np.pi*wtime*F) * np.exp(- wtime**2/(2*s**2))  # morlet wavelet
@@ -87,7 +91,13 @@ def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False):
         
         conv_wave = np.fft.ifft(fft_wavelet*fft_eeg, nConv)
         conv_wave = conv_wave[:, fs:-fs]
-        temppow = np.mean(np.abs(conv_wave)**2,0)
+        
+        if needaverage:
+            temppow = np.mean(np.abs(conv_wave)**2,0)
+        else:
+            Pxx[idx, :, :] = np.abs(conv_wave)**2
+            continue
+        
         if zscore:
             temppow_cal = 10*np.log10(temppow)  # db-calibration
             temppow_cal = (temppow_cal-np.mean(temppow_cal))/np.std(temppow_cal)
@@ -98,6 +108,9 @@ def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False):
         Pxx[idx, :] = temppow_cal
 
     if reflection:
-        return Pxx[:, np.size(eeg_data,1):-np.size(eeg_data,1)]
+        if needaverage:
+            return Pxx[:, np.size(eeg_data,1):-np.size(eeg_data,1)]
+        else:
+            return Pxx[:,:,np.size(eeg_data,1):-np.size(eeg_data,1)]
     else:
         return Pxx
