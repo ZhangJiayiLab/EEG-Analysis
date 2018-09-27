@@ -1,17 +1,17 @@
 """
-short time fast fourier transformation
-
-basic stfft function, based on scipy.fftpack.fft,
-with a taper function.
+time-frequency decomposition analysis using
+short time fast fourier transform and
+morlet wavelet transform
 
 author: Yizhan Miao
 email: yzmiao@protonmail.com
-last update: Sept 21 2018
+last update: Sept 27 2018
 """
 
 from scipy.fftpack import fft, ifft
 import numpy as np
-from numba import jit
+# from numba import jit  # numba acceleration
+
 
 # @jit(nopython=True)
 def hantaper(timepoints):
@@ -46,14 +46,14 @@ def stfft(data, window, noverlap, fs, taper=hantaper, rho=2):
     for idx in range(nstep):
         temp = data[(slice(None), slice(idx*step,idx*step+window))] * taper_list
         power = np.abs(fft(temp, n=rho*fs)/(1.2*fs)) ** 2
-        Pxx[(slice(None), slice(None), idx)] = np.log10(power[(slice(None),slice(0,rho*500))])
+        Pxx[(slice(None), slice(None), idx)] = np.log10(power[(slice(None), slice(0,rho*500))])
 
     return Pxx, Tspec
 
 
 # @jit(nopython=True)
-def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False, needaverage=True):
-    """time domain analysis with wavelet tranform
+def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False, averageall=True):
+    """time frequency decomposition analysis with wavelet tranform
     
     Syntax: Pxx = dwt_tf(eeg_data, fs, frange, baseroi)
     
@@ -65,6 +65,8 @@ def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False, n
     frange     -- frequency array for calculation
     baseroi    -- range for normalization baseline
     reflection -- perform data reflection, compensate the edge effect
+    zscore     -- using zscore normalization
+    averageall -- return averaged total power
     """
     if reflection:
         eeg_data_flip = np.fliplr(eeg_data)
@@ -74,7 +76,7 @@ def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False, n
     else:
         fft_eeg_data = eeg_data
         
-        # wavelet parameters
+    # wavelet parameters
     wtime = np.linspace(-1,1,2*fs)
     nConv = np.size(fft_eeg_data, 1) + 2*fs
     fft_eeg = np.fft.fft(fft_eeg_data, nConv)
