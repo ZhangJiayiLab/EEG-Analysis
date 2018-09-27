@@ -17,7 +17,7 @@ class EEGAnalysis(object):
         self.resultdir = os.path.join(resultdir, patientname)
         self.datadir = os.path.join(datadir, patientname, "EEG")
 
-        general.dircheck(self.resultdir, patientname)
+        general.dircheck(self.resultdir, expname)
 
         # analysis parameters
         self.fs = fs
@@ -80,12 +80,14 @@ class EEGAnalysis(object):
                 plt.figure(figsize=(5,3))
                 plt.contourf(tspec, frange, self.tfdata[chidx, :, :], 30, cmap=plt.get_cmap("jet"))
                 
-                if layout != None:
-                    if np.size(layout[layout.channel==chidx]) == 1:
+                if type(layout) != type(None):
+                    if len(layout[layout.channel==chidx]) == 1:
                         plt.title("ch%d - %s"%(chidx, layout[layout.channel==chidx].position.values[0]))
                     else:
                         plt.title("ch%d - n.a."%chidx)
                 
+                if markername == "entrain":
+                    plt.clim([-5,5])
                 plt.savefig(os.path.join(self.resultdir, 'preview', 'tf_domain', self.name, "ch%03d"%chidx+matsuffix+'.png'), bbox_inches='tight')
                 plt.close()
 
@@ -264,3 +266,37 @@ class EEGAnalysis(object):
             
         self.auc_on = auc_on
         self.auc_off = auc_off
+        
+        
+    def bandpower_curve_preview(self, bandname="all", markername="entrain", iti=5):
+        
+        cue_onset = self.markers[markername][0][0][0,:]
+        tspec = np.linspace(self.roi[0], self.roi[1], (self.roi[1]-self.roi[0])*self.fs)
+        
+        if bandname == "all":
+            bandnames = self.bandname
+        else:
+            bandnames = [bandname]
+        
+        for chidx in tqdm(range(np.size(self.channels, 0)), ascii=True):
+            power_curve = []
+            
+            for cutoffband in bandnames:
+                cutoff = eegFilter.getbandrange(cutoffband)
+                frange = np.logspace(np.log10(cutoff[0]), np.log10(cutoff[1]), 5)
+
+                ch_split = general.split_datawithmarker(self.channels[chidx, :], 
+                                                        cue_onset, self.roi, self.fs)
+                pxx = stfft.dwt_tf(ch_split, self.fs, frange, reflection=True, zscore=True)
+                power_curve.append(np.mean(pxx, 0))
+                
+            plt.figure(figsize=(3,1*len(bandnames)))
+            for pidx in range(len(bandnames)):
+                plt.subplot(len(bandnames), 1, pidx+1)
+                plt.plot(tspec[::100], power_curve[pidx][::100], 'k')
+                plt.title(bandnames[pidx])
+                plt.xlim(tspec[0], tspec[-1])
+                
+            plt.savefig(os.path.join(self.resultdir, 'preview', 'bandpower', self.name, "ch%03d"%chidx+markername+'.png'), bbox_inches='tight')
+            plt.close()
+                

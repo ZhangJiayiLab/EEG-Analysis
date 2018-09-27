@@ -13,10 +13,9 @@ import os
 def split_datawithmarker(data, marker, roi, fs):
     """Splite data array by markers and roi."""
     groupdata = np.zeros((len(marker), int(roi[1]-roi[0])*fs))
-#     print(roi)
+    gap = np.size(groupdata, 1)
     for idx, each in enumerate(marker):
-#         print(np.shape(data[int((each+roi[0])*fs):int((each+roi[1])*fs)]))
-        groupdata[idx, :] = data[np.floor((each+roi[0])*fs):np.floor((each+roi[1])*fs)]
+        groupdata[idx, :] = data[int(np.floor((each+roi[0])*fs)):int(np.floor((each+roi[0])*fs))+gap]
 
     return groupdata
 
@@ -31,9 +30,12 @@ def dircheck(resultdir, title):
         
         os.path.join(resultdir, "preview"),
         os.path.join(resultdir, "preview", "tf_domain"),
+        os.path.join(resultdir, "preview", "tf_domain", title),
         os.path.join(resultdir, "preview", "bandpower"),
+        os.path.join(resultdir, "preview", "bandpower", title),
         os.path.join(resultdir, "preview", "raw"),
-        os.path.join(resultdir, "preview", "bandpass"),
+        os.path.join(resultdir, "preview", "raw", title),
+#         os.path.join(resultdir, "preview", "bandpass"),
     ]
 
     for item in checklist:

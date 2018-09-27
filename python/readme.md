@@ -16,12 +16,16 @@ should at least have 3 variables:
 
 #### 2018-09-26
 - [ ] Yunfan Shu and Chen Zhou tfdomain plots
-    - [ ] 10 sec adaptation
-    - [ ] plots with position name
-- [ ] channel classification into 4 categories
-- [ ] entrain quantification
+    - [x] 10 sec adaptation
+    - [x] plots with position name
+- [ ] channel classification into 4 categories (manually)
+
+- [x] bandpower quantification
+
 - [ ] mice date
 - [ ] phase analysis
+    - [ ] ITPC
+    - [ ] wITPCz
 
 #### 2018-09-21
 - [x] average frequency-time domain output

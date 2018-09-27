@@ -81,7 +81,7 @@ def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False, a
     nConv = np.size(fft_eeg_data, 1) + 2*fs
     fft_eeg = np.fft.fft(fft_eeg_data, nConv)
     
-    if needaverage:
+    if averageall:
         Pxx = np.zeros((np.size(frange), np.size(fft_eeg_data, 1)))
     else:
         Pxx = np.zeros((np.size(frange), np.size(eeg_data, 0), np.size(fft_eeg_data, 1)))
@@ -94,7 +94,7 @@ def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False, a
         conv_wave = np.fft.ifft(fft_wavelet*fft_eeg, nConv)
         conv_wave = conv_wave[:, fs:-fs]
         
-        if needaverage:
+        if averageall:
             temppow = np.mean(np.abs(conv_wave)**2,0)
         else:
             Pxx[idx, :, :] = np.abs(conv_wave)**2
@@ -110,7 +110,7 @@ def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False, a
         Pxx[idx, :] = temppow_cal
 
     if reflection:
-        if needaverage:
+        if averageall:
             return Pxx[:, np.size(eeg_data,1):-np.size(eeg_data,1)]
         else:
             return Pxx[:,:,np.size(eeg_data,1):-np.size(eeg_data,1)]
