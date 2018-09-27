@@ -12,10 +12,11 @@ import os
 
 def split_datawithmarker(data, marker, roi, fs):
     """Splite data array by markers and roi."""
-    groupdata = np.zeros((len(marker), (roi[1]-roi[0])*fs))
-
+    groupdata = np.zeros((len(marker), int(roi[1]-roi[0])*fs))
+#     print(roi)
     for idx, each in enumerate(marker):
-        groupdata[idx, :] = data[(int(each)+roi[0])*fs:(int(each)+roi[1])*fs]
+#         print(np.shape(data[int((each+roi[0])*fs):int((each+roi[1])*fs)]))
+        groupdata[idx, :] = data[np.floor((each+roi[0])*fs):np.floor((each+roi[1])*fs)]
 
     return groupdata
 

@@ -43,7 +43,8 @@ class EEGAnalysis(object):
 
     def tfdomain_analysis(self, frange, markername, baseroi=(1,2), rho=5, 
                           needsavemat=False, matsuffix="_tf", averaged=False,
-                          needpreview=False):
+                          needpreview=False, layout=None):
+
         cue_onset = self.markers[markername][0][0][0,:]
         ch_split = general.split_datawithmarker(
                 self.channels[1, :], cue_onset, self.roi, self.fs)
@@ -54,7 +55,7 @@ class EEGAnalysis(object):
         for chidx in tqdm(range(np.size(self.channels, 0)), ascii=True):
             ch_split = general.split_datawithmarker(
                     self.channels[chidx, :], cue_onset, self.roi, self.fs)
-            pxx = stfft.dwt_tf(ch_split, self.fs, frange, baseroi, reflection=True)
+            pxx = stfft.dwt_tf(ch_split, self.fs, frange, reflection=True)
 
             power_channels[chidx, :, :] = pxx
 
@@ -78,6 +79,13 @@ class EEGAnalysis(object):
             for chidx in tqdm(range(np.size(self.tfdata, 0)), ascii=True):
                 plt.figure(figsize=(5,3))
                 plt.contourf(tspec, frange, self.tfdata[chidx, :, :], 30, cmap=plt.get_cmap("jet"))
+                
+                if layout != None:
+                    if np.size(layout[layout.channel==chidx]) == 1:
+                        plt.title("ch%d - %s"%(chidx, layout[layout.channel==chidx].position.values[0]))
+                    else:
+                        plt.title("ch%d - n.a."%chidx)
+                
                 plt.savefig(os.path.join(self.resultdir, 'preview', 'tf_domain', self.name, "ch%03d"%chidx+matsuffix+'.png'), bbox_inches='tight')
                 plt.close()
 

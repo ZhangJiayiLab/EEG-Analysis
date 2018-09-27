@@ -13,6 +13,17 @@ should at least have 3 variables:
 ## TODO
 
 ### Entrain
+
+#### 2018-09-26
+- [ ] Yunfan Shu and Chen Zhou tfdomain plots
+    - [ ] 10 sec adaptation
+    - [ ] plots with position name
+- [ ] channel classification into 4 categories
+- [ ] entrain quantification
+- [ ] mice date
+- [ ] phase analysis
+
+#### 2018-09-21
 - [x] average frequency-time domain output
     - [x] grating (tf_domain)
     - [x] entrain (tf_domain)
@@ -25,7 +36,7 @@ should at least have 3 variables:
 - [ ] time points of all events
     - [x] threshold (event_times)
     - [ ] range (event_times)
-- [ ] raw data
-    - [ ] raw data preview (preview/raw)
-    - [ ] bandpass filted preview (preview/bandpass)
+- [x] raw data
+    - [x] raw data preview (preview/raw)
+    - [x] bandpass filted preview (preview/bandpass)
 - [ ] entrain average

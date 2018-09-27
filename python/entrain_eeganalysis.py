@@ -9,7 +9,7 @@ import time
 
 datadir = "../../Data"
 resultdir = "../../Result/"
-patientName = "Demo"
+patientName = "Yunfan Shu"
 fs = 2000
 cutoffband = ["gamma"]
 
@@ -17,7 +17,7 @@ plot_tfdomain = True
 plot_tfdomain_entrain = True
 plot_bandpower = False  #TODO
 plot_rawdata = False    #TODO
-detect_latency = True
+detect_latency = False
 detect_auc = False
 # detect_global_events = False  #TODO
 
@@ -31,7 +31,7 @@ for item in os.listdir(os.path.join(datadir, patientName, "EEG", "Compact")):
             files.append(os.path.splitext(item)[0])
 
 files = [
-    "999999-9-9"
+    "180816-5-5"
 ]
 
 print(files)
@@ -50,6 +50,10 @@ for fidx, eachfile in enumerate(files):
         expname = eachfile,
         fs=fs,
         roi=(-2,5))
+    
+    iti = analysis.markers["grating"][0][0][0,1] - analysis.markers["grating"][0][0][0,0]
+    analysis.roi = (-2, int(np.ceil(iti)))
+    print("ITI = %.1f"%iti)
 
     print("starting processing %d/%d: %s"%(fidx, len(files), analysis.name))
 
@@ -62,11 +66,13 @@ for fidx, eachfile in enumerate(files):
     ##### time-frequency domain analysis #####
     if plot_tfdomain:
         analysis.tfdomain_analysis(np.logspace(np.log10(1), np.log10(200), 10),
-                "grating", needsavemat=True, matsuffix="_grating", averaged=True, rho=5, needpreview=True)
+                                   "grating", needsavemat=True, matsuffix="_grating", 
+                                   averaged=True, rho=5, needpreview=True, layout=layout)
 
-        if plot_tfdomain_entrain:
-            analysis.tfdomain_analysis(np.logspace(np.log10(1), np.log10(200), 10),
-                   "entrain", needsavemat=True, matsuffix="_entrain", averaged=True, rho=5, needpreview=True)
+    if plot_tfdomain_entrain:
+        analysis.tfdomain_analysis(np.logspace(np.log10(1), np.log10(200), 10),
+                                   "entrain", needsavemat=True, matsuffix="_entrain",
+                                   averaged=True, rho=5, needpreview=True, layout=layout)
 
     for targetband in cutoffband:
 
@@ -119,6 +125,6 @@ for fidx, eachfile in enumerate(files):
 
     elapsedtime = time.time() - start_t
     remaintime = (len(files)-fidx-1)*elapsedtime
-    print("estimated remaining time: %.2f sec"%remaintime)
+    print("estimated remaining time: %.2f sec\n"%remaintime)
 
 print("all finished! elapsed time: %.2f sec"%(time.time()-head_t))
