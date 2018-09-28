@@ -15,17 +15,22 @@ should at least have 3 variables:
 ### Entrain
 
 #### 2018-09-26
-- [ ] Yunfan Shu and Chen Zhou tfdomain plots
+- [x] Chen Zhou tfdomain plots
     - [x] 10 sec adaptation
     - [x] plots with position name
-- [ ] channel classification into 4 categories (manually)
+- [ ] channel classification into 4 categories
+    - [x] AUC
+    - [ ] PCA
+    - [ ] kmeans
 
 - [x] bandpower quantification
 
-- [ ] mice date
+- [x] mice date
 - [ ] phase analysis
-    - [ ] ITPC
+    - [ ] phase-lock
+    - [x] ITPC
     - [ ] wITPCz
+    - [ ] PAC
 
 #### 2018-09-21
 - [x] average frequency-time domain output

@@ -59,7 +59,7 @@ def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False, a
     
     Keyword arguments:
     data       -- a m*n numpy.ndarray. 
-                  columns as observations (or channels), 
+                  columns as observations, 
                   rows as raw data.
     fs         -- sampling frequency
     frange     -- frequency array for calculation
@@ -77,8 +77,8 @@ def dwt_tf(eeg_data, fs, frange, baseroi=None, reflection=False, zscore=False, a
         fft_eeg_data = eeg_data
         
     # wavelet parameters
-    wtime = np.linspace(-1,1,2*fs)
-    nConv = np.size(fft_eeg_data, 1) + 2*fs
+    wtime = np.linspace(-1,1,int(2*fs))
+    nConv = np.size(fft_eeg_data, 1) + int(2*fs)
     fft_eeg = np.fft.fft(fft_eeg_data, nConv)
     
     if averageall:

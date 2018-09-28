@@ -81,13 +81,14 @@ class EEGAnalysis(object):
                 plt.contourf(tspec, frange, self.tfdata[chidx, :, :], 30, cmap=plt.get_cmap("jet"))
                 
                 if type(layout) != type(None):
-                    if len(layout[layout.channel==chidx]) == 1:
-                        plt.title("ch%d - %s"%(chidx, layout[layout.channel==chidx].position.values[0]))
+                    if len(layout[layout.channel==chidx+1]) == 1:
+                        plt.title("ch%d - %s"%(chidx, layout[layout.channel==chidx+1].position.values[0]))
                     else:
                         plt.title("ch%d - n.a."%chidx)
                 
                 if markername == "entrain":
-                    plt.clim([-5,5])
+#                     plt.clim([-5,5])
+                    pass
                 plt.savefig(os.path.join(self.resultdir, 'preview', 'tf_domain', self.name, "ch%03d"%chidx+matsuffix+'.png'), bbox_inches='tight')
                 plt.close()
 
@@ -300,3 +301,69 @@ class EEGAnalysis(object):
             plt.savefig(os.path.join(self.resultdir, 'preview', 'bandpower', self.name, "ch%03d"%chidx+markername+'.png'), bbox_inches='tight')
             plt.close()
                 
+                
+    
+    def bandpower_auc_detection(self, bandname="all", markername="entrain", iti=5, auc_roi=(-2,2)):
+        
+        cue_onset = self.markers[markername][0][0][0,:]
+        tspec = np.linspace(self.roi[0], self.roi[1], (self.roi[1]-self.roi[0])*self.fs)
+        
+        if bandname == "all":
+            bandnames = ["delta", "theta", "alpha", "beta", "low gamma", "high gamma", "highpass"]
+        else:
+            bandnames = [bandname]
+        
+        exportfile = os.path.join(self.resultdir, "auc", "bandpower_auc.csv")
+        exportfile_raw = os.path.join(self.resultdir, "auc", "bandpower_auc_raw.csv")
+        exportentry = "{exp},{channel},{id},{mode},{delta},{theta},{alpha},{beta},{lowgamma},{highgamma},{highpass}\n"
+        
+        if not os.path.isfile(exportfile):
+            with open(exportfile, 'w') as csvf:
+                csvf.write("exp,channel,id,mode,delta,theta,alpha,beta,lowgamma,highgamma,highpass\n")
+                
+        if not os.path.isfile(exportfile_raw):
+            with open(exportfile_raw, 'w') as csvf:
+                csvf.write("exp,channel,id,mode,delta,theta,alpha,beta,lowgamma,highgamma,highpass\n")
+        
+        for chidx in tqdm(range(np.size(self.channels, 0)), ascii=True):
+            power_curve = {}
+            
+            ch_split = general.split_datawithmarker(self.channels[chidx, :], 
+                                                    cue_onset, self.roi, self.fs)
+            for cutoffband in bandnames:
+                cutoff = eegFilter.getbandrange(cutoffband)
+                frange = np.logspace(np.log10(cutoff[0]), np.log10(cutoff[1]), 5)
+
+                pxx = stfft.dwt_tf(ch_split, self.fs, frange, reflection=True, zscore=True)
+                power_curve[cutoffband] = np.sum(np.mean(pxx, 0)[np.where((tspec>auc_roi[0])&(tspec<auc_roi[1]))])
+                
+            
+            with open(exportfile_raw, 'a') as csvf:
+                csvf.write(exportentry.format(
+                    exp = self.name,
+                    channel = chidx+1,
+                    id = self.name+'-ch%03d'%(chidx+1),
+                    mode = markername,
+                    delta = power_curve['delta'],
+                    theta = power_curve['theta'],
+                    alpha = power_curve['alpha'],
+                    beta = power_curve['beta'],
+                    lowgamma = power_curve['low gamma'],
+                    highgamma = power_curve['high gamma'],
+                    highpass = power_curve['highpass'],
+                ))
+                
+            with open(exportfile, 'a') as csvf:
+                csvf.write(exportentry.format(
+                    exp = self.name,
+                    channel = chidx+1,
+                    id = self.name+'-ch%03d'%(chidx+1),
+                    mode = markername,
+                    delta = power_curve['delta']/self.fs,
+                    theta = power_curve['theta']/self.fs,
+                    alpha = power_curve['alpha']/self.fs,
+                    beta = power_curve['beta']/self.fs,
+                    lowgamma = power_curve['low gamma']/self.fs,
+                    highgamma = power_curve['high gamma']/self.fs,
+                    highpass = power_curve['highpass']/self.fs,
+                ))

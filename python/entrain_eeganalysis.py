@@ -15,24 +15,26 @@ cutoffband = ["gamma"]
 
 plot_tfdomain = False
 plot_tfdomain_entrain = False
-plot_bandpower = True  #TODO
+plot_bandpower = False  #TODO
 plot_rawdata = False    #TODO
 detect_latency = False
-detect_auc = False
+detect_auc = True
+overwrite = False
 # detect_global_events = False  #TODO
 
 ##### set target files #####
 files = []
 matching_pattern = r"\d{6}-.*?\.mat"
+processedfiles = general.getprocessedfiles(resultdir, patientName)
 for item in os.listdir(os.path.join(datadir, patientName, "EEG", "Compact")):
     if re.match(matching_pattern, item):
-        possibleResultFile = os.path.splitext(item)[0] + ".csv"
-        if not os.path.exists(os.path.join(resultdir, patientName, possibleResultFile)):
-            files.append(os.path.splitext(item)[0])
+        possibleResultFile = os.path.splitext(item)[0]
+        if possibleResultFile not in processedfiles["processed"] or overwrite:
+            files.append(possibleResultFile)
 
-files = [
-    "180829-2-10"
-]
+# files = [
+#     "180829-2-10"
+# ]
 
 print(files)
 input("press any key to start ...")
@@ -106,27 +108,32 @@ for fidx, eachfile in enumerate(files):
         if plot_bandpower:
             analysis.bandpower_curve_preview(markername="grating")
             analysis.bandpower_curve_preview(markername="entrain")
-
+            
         if detect_auc:
-            analysis.auc_detection("grating", cutoffband=targetband)
-            auc_on_grating = analysis.auc_on
-            auc_off_grating = analysis.auc_off
+            analysis.bandpower_auc_detection(markername="grating")
+            analysis.bandpower_auc_detection(markername="entrain")
 
-            analysis.auc_detection("entrain", cutoffband=targetband)
-            auc_on_entrain = analysis.auc_on
-            auc_off_entrain = analysis.auc_off
+#         if detect_auc:
+#             analysis.auc_detection("grating", cutoffband=targetband)
+#             auc_on_grating = analysis.auc_on
+#             auc_off_grating = analysis.auc_off
 
-            savemat(os.path.join(resultdir, patientName, "auc", eachfile+".mat"),
-                    {"channel":channel,
-                     "position":position,
-                     "auc_on_grating": auc_on_grating[channel-1, :],
-                     "auc_off_grating": auc_off_grating[channel-1, :],
-                     "auc_on_entrain": auc_on_entrain[channel-1, :],
-                     "auc_off_entrain":auc_off_entrain[channel-1, :]})
+#             analysis.auc_detection("entrain", cutoffband=targetband)
+#             auc_on_entrain = analysis.auc_on
+#             auc_off_entrain = analysis.auc_off
+
+#             savemat(os.path.join(resultdir, patientName, "auc", eachfile+".mat"),
+#                     {"channel":channel,
+#                      "position":position,
+#                      "auc_on_grating": auc_on_grating[channel-1, :],
+#                      "auc_off_grating": auc_off_grating[channel-1, :],
+#                      "auc_on_entrain": auc_on_entrain[channel-1, :],
+#                      "auc_off_entrain":auc_off_entrain[channel-1, :]})
 
 #         if detect_global_events:
 #             analysis.global_events_detection()
 
+    general.writeprocessedfile(resultdir, patientName, eachfile)
     elapsedtime = time.time() - start_t
     remaintime = (len(files)-fidx-1)*elapsedtime
     print("estimated remaining time: %.2f sec\n"%remaintime)
