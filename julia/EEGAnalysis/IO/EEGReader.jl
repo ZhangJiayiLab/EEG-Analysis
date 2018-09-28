@@ -1,0 +1,3 @@
+module EEGReader
+nothing
+end
