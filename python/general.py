@@ -28,7 +28,7 @@ def dircheck(resultdir, title):
         os.path.join(resultdir, "latency"),
         os.path.join(resultdir, "event_times"),
         os.path.join(resultdir, "auc"),
-        
+
         os.path.join(resultdir, "preview"),
         os.path.join(resultdir, "preview", "tf_domain"),
         os.path.join(resultdir, "preview", "tf_domain", title),
@@ -62,7 +62,7 @@ def getprocessedfiles(resultdir, patientName):
             plist.write("{\"processed\":[]}")
         return {"processed":[]}
 
-    
+
 def writeprocessedfile(resultdir, patientName, filename):
     processedfiles = getprocessedfiles(resultdir, patientName)
     if filename in processedfiles:
@@ -71,4 +71,4 @@ def writeprocessedfile(resultdir, patientName, filename):
         processedfiles['processed'].append(filename)
         with open(os.path.join(resultdir, patientName, "processed.json"), 'w') as plist:
             plist.write(json.dumps(processedfiles))
-        return 
+        return
