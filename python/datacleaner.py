@@ -1,12 +1,13 @@
 """
 Re-organize the data structure for python analysis
 
+--> EEGAnalysis.io.compactdata
+
 author: Yizhan Miao
 email: yzmiao@protonmail.com
 last update: Sept 23 2018
 """
 
-# %matplotlib inline
 import sys, os, re
 import h5py
 import matplotlib.pyplot as plt
@@ -81,4 +82,3 @@ if __name__ == "__main__":
     for idx, item in enumerate(rawfiles):
         print("%d/%d: %s"%(idx, len(rawfiles), item))
         processCompact(datadir, "Spike2", item)
-
