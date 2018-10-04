@@ -52,7 +52,7 @@ for fidx, eachfile in enumerate(files):
         expname = eachfile,
         fs=fs,
         roi=(-2,5))
-    
+
     iti = analysis.markers["grating"][0][0][0,1] - analysis.markers["grating"][0][0][0,0]
     analysis.roi = (-2, int(np.ceil(iti)))
 
@@ -68,7 +68,7 @@ for fidx, eachfile in enumerate(files):
     ##### time-frequency domain analysis #####
     if plot_tfdomain:
         analysis.tfdomain_analysis(np.logspace(np.log10(1), np.log10(200), 10),
-                                   "grating", needsavemat=True, matsuffix="_grating", 
+                                   "grating", needsavemat=True, matsuffix="_grating",
                                    averaged=True, rho=5, needpreview=True, layout=layout)
 
     if plot_tfdomain_entrain:
@@ -104,11 +104,11 @@ for fidx, eachfile in enumerate(files):
                      "events_grating": events_grating,
                      "entrain": latency_entrain[channel-1],
                      "events_entrain":events_entrain})
-            
+
         if plot_bandpower:
             analysis.bandpower_curve_preview(markername="grating")
             analysis.bandpower_curve_preview(markername="entrain")
-            
+
         if detect_auc:
             analysis.bandpower_auc_detection(markername="grating")
             analysis.bandpower_auc_detection(markername="entrain")

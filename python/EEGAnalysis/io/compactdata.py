@@ -10,6 +10,7 @@ import os, re
 from scipy.io import loadmat, savemat
 import h5py
 import numpy as np
+from tqdm import tqdm
 
 
 def checkcompact(datadir, filename):
@@ -40,23 +41,23 @@ def createcompact(datadir, patientname, fs, overwrite=False,
 
     rawfiles = []
     for item in os.listdir(_spike2_dir):
-        if re.match(match_pattern, item) and
+        if re.match(match_pattern, item) and \
             (not checkcompact(_compact_dir, item) or overwrite):
             rawfiles.append(item)
 
     print("create compact mat from:\n", rawfiles)
     input("press enter to start ...")
     for idx, item in tqdm(enumerate(rawfiles)):
-        with open(os.path.join(_spike2_dir, item), 'r') as f:
-            channels = np.zeros((len(f)-2, len(f["Chan__1"]["times"][0])))
-            times = np.array(f["Chann__1"]["times"])[0, :]
-            cueonset = np.array(f["Memory"]["times"])[0, :]
+        with h5py.File(os.path.join(_spike2_dir, item), "r") as f:
+            times = list(f["Chan__1"]["times"])[0]
+            cueonset = list(f["Memory"]["times"])[0]
+            channels = np.zeros((len(f)-2, len(times)))
 
             for i in f.keys():
                 if i == "Memory" or i == "file":
                     continue
 
-                idx = int(np.array(f[i]["title"], dtype="uint8")[4:].tostrig())
+                idx = int(np.array(f[i]["title"], dtype="uint8")[4:].tostring())
                 channels[idx-1, :] = np.array(f[i]["values"])[0,:]
 
         length = np.size(channels, 1) / fs
@@ -68,7 +69,7 @@ def createcompact(datadir, patientname, fs, overwrite=False,
             "channels": channels,
             "markers": {
                 "grating": cueonset,
-                "entrain":, entrain_cue}
+                "entrain": entrain_cue}
             })
 
         if len(entrain_cue) == 0:
