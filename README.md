@@ -1,3 +1,7 @@
 # EEG-Analysis
 
-## Folder Structure
+Archived
+
+for python module, check EEGAnalysis
+
+for Julia module, check EEGAnalysis.jl
