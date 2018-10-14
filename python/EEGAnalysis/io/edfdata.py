@@ -1,5 +1,0 @@
-"""
-*.edf file manipulation
-
-#TODO
-"""
