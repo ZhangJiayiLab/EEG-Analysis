@@ -9,30 +9,32 @@ import time
 
 datadir = "../../Data"
 resultdir = "../../Result/"
-patientName = "Yunfan Shu"
+patientName = "Chen Zhou"
 fs = 2000
 cutoffband = ["gamma"]
 
-plot_tfdomain = True
-plot_tfdomain_entrain = True
+plot_tfdomain = False
+plot_tfdomain_entrain = False
 plot_bandpower = False  #TODO
 plot_rawdata = False    #TODO
 detect_latency = False
-detect_auc = False
+detect_auc = True
+overwrite = False
 # detect_global_events = False  #TODO
 
 ##### set target files #####
 files = []
 matching_pattern = r"\d{6}-.*?\.mat"
+processedfiles = general.getprocessedfiles(resultdir, patientName)
 for item in os.listdir(os.path.join(datadir, patientName, "EEG", "Compact")):
     if re.match(matching_pattern, item):
-        possibleResultFile = os.path.splitext(item)[0] + ".csv"
-        if not os.path.exists(os.path.join(resultdir, patientName, possibleResultFile)):
-            files.append(os.path.splitext(item)[0])
+        possibleResultFile = os.path.splitext(item)[0]
+        if possibleResultFile not in processedfiles["processed"] or overwrite:
+            files.append(possibleResultFile)
 
-files = [
-    "180816-5-5"
-]
+# files = [
+#     "180829-2-10"
+# ]
 
 print(files)
 input("press any key to start ...")
@@ -50,12 +52,12 @@ for fidx, eachfile in enumerate(files):
         expname = eachfile,
         fs=fs,
         roi=(-2,5))
-    
+
     iti = analysis.markers["grating"][0][0][0,1] - analysis.markers["grating"][0][0][0,0]
     analysis.roi = (-2, int(np.ceil(iti)))
-    print("ITI = %.1f"%iti)
 
     print("starting processing %d/%d: %s"%(fidx, len(files), analysis.name))
+    print("ITI = %.1f"%iti)
 
     ##### import layout #####
     layout = pd.read_csv(os.path.join(datadir, patientName, "EEG", "Layout", "%s-layout.csv"%patientName))
@@ -66,7 +68,7 @@ for fidx, eachfile in enumerate(files):
     ##### time-frequency domain analysis #####
     if plot_tfdomain:
         analysis.tfdomain_analysis(np.logspace(np.log10(1), np.log10(200), 10),
-                                   "grating", needsavemat=True, matsuffix="_grating", 
+                                   "grating", needsavemat=True, matsuffix="_grating",
                                    averaged=True, rho=5, needpreview=True, layout=layout)
 
     if plot_tfdomain_entrain:
@@ -103,26 +105,35 @@ for fidx, eachfile in enumerate(files):
                      "entrain": latency_entrain[channel-1],
                      "events_entrain":events_entrain})
 
+        if plot_bandpower:
+            analysis.bandpower_curve_preview(markername="grating")
+            analysis.bandpower_curve_preview(markername="entrain")
+
         if detect_auc:
-            analysis.auc_detection("grating", cutoffband=targetband)
-            auc_on_grating = analysis.auc_on
-            auc_off_grating = analysis.auc_off
+            analysis.bandpower_auc_detection(markername="grating")
+            analysis.bandpower_auc_detection(markername="entrain")
 
-            analysis.auc_detection("entrain", cutoffband=targetband)
-            auc_on_entrain = analysis.auc_on
-            auc_off_entrain = analysis.auc_off
+#         if detect_auc:
+#             analysis.auc_detection("grating", cutoffband=targetband)
+#             auc_on_grating = analysis.auc_on
+#             auc_off_grating = analysis.auc_off
 
-            savemat(os.path.join(resultdir, patientName, "auc", eachfile+".mat"),
-                    {"channel":channel,
-                     "position":position,
-                     "auc_on_grating": auc_on_grating[channel-1, :],
-                     "auc_off_grating": auc_off_grating[channel-1, :],
-                     "auc_on_entrain": auc_on_entrain[channel-1, :],
-                     "auc_off_entrain":auc_off_entrain[channel-1, :]})
+#             analysis.auc_detection("entrain", cutoffband=targetband)
+#             auc_on_entrain = analysis.auc_on
+#             auc_off_entrain = analysis.auc_off
+
+#             savemat(os.path.join(resultdir, patientName, "auc", eachfile+".mat"),
+#                     {"channel":channel,
+#                      "position":position,
+#                      "auc_on_grating": auc_on_grating[channel-1, :],
+#                      "auc_off_grating": auc_off_grating[channel-1, :],
+#                      "auc_on_entrain": auc_on_entrain[channel-1, :],
+#                      "auc_off_entrain":auc_off_entrain[channel-1, :]})
 
 #         if detect_global_events:
 #             analysis.global_events_detection()
 
+    general.writeprocessedfile(resultdir, patientName, eachfile)
     elapsedtime = time.time() - start_t
     remaintime = (len(files)-fidx-1)*elapsedtime
     print("estimated remaining time: %.2f sec\n"%remaintime)

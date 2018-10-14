@@ -37,9 +37,9 @@ def butter_bandpass_filter(lowcut, highcut, fs, order):
 
 def butter_bandpass(data, bandname, fs, order=5):
     """Butterworth bandpass filter
-    
+
     Syntax: y = butter_bandpass(data, bandname, fs, order=5)
-    
+
     Keyword arguments:
     data     -- array of data to be filtered.
     bandname -- desired band name, one of ["delta","theta","alpha",
@@ -49,8 +49,9 @@ def butter_bandpass(data, bandname, fs, order=5):
     """
     lowcut, highcut = getbandrange(bandname)
     b, a = butter_bandpass_filter(lowcut, highcut, fs, order)
-    # y = lfilter(b, a, data)  # Apply a digital filter only forward
-    y = filtfilt(b, a, data)  # Apply a digital filter forward and backward
+    zi = lfilter_zi(b, a)
+    y = lfilter(b, a, data, zi=zi*data[0])
+    #y = filtfilt(b, a, data)  # Apply a digital filter forward and backward
     return y
 
 
